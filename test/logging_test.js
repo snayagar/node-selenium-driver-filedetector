@@ -15,36 +15,29 @@
 
 'use strict';
 
-var Browser = require('..').Browser,
-    By = require('..').By,
+var By = require('..').By,
     logging = require('..').logging,
     assert = require('../testing/assert'),
     test = require('../lib/test');
 
 test.suite(function(env) {
+  env.autoCreateDriver = false;
+
   // Logging API has numerous issues with PhantomJS:
   //   - does not support adjusting log levels for type "browser".
   //   - does not return proper log level for "browser" messages.
   //   - does not delete logs after retrieval
-  test.ignore(env.browsers(Browser.PHANTOM_JS)).
+  test.ignore(env.browsers(test.Browser.PHANTOMJS)).
   describe('logging', function() {
-    var driver;
-
-    test.beforeEach(function() {
-      driver = null;
-    });
-
     test.afterEach(function() {
-      if (driver) {
-        driver.quit();
-      }
+      env.dispose();
     });
 
     test.it('can be disabled', function() {
       var prefs = new logging.Preferences();
       prefs.setLevel(logging.Type.BROWSER, logging.Level.OFF);
 
-      driver = env.builder()
+      var driver = env.builder()
           .setLoggingPrefs(prefs)
           .build();
 
@@ -60,12 +53,12 @@ test.suite(function(env) {
     });
 
     // Firefox does not capture JS error console log messages.
-    test.ignore(env.browsers(Browser.FIREFOX)).
+    test.ignore(env.browsers(test.Browser.FIREFOX)).
     it('can be turned down', function() {
       var prefs = new logging.Preferences();
       prefs.setLevel(logging.Type.BROWSER, logging.Level.SEVERE);
 
-      driver = env.builder()
+      var driver = env.builder()
           .setLoggingPrefs(prefs)
           .build();
 
@@ -83,12 +76,12 @@ test.suite(function(env) {
     });
 
     // Firefox does not capture JS error console log messages.
-    test.ignore(env.browsers(Browser.FIREFOX)).
+    test.ignore(env.browsers(test.Browser.FIREFOX)).
     it('can be made verbose', function() {
       var prefs = new logging.Preferences();
       prefs.setLevel(logging.Type.BROWSER, logging.Level.DEBUG);
 
-      driver = env.builder()
+      var driver = env.builder()
           .setLoggingPrefs(prefs)
           .build();
 
@@ -112,12 +105,12 @@ test.suite(function(env) {
     });
 
     // Firefox does not capture JS error console log messages.
-    test.ignore(env.browsers(Browser.FIREFOX)).
+    test.ignore(env.browsers(test.Browser.FIREFOX)).
     it('clears records after retrieval', function() {
       var prefs = new logging.Preferences();
       prefs.setLevel(logging.Type.BROWSER, logging.Level.DEBUG);
 
-      driver = env.builder()
+      var driver = env.builder()
           .setLoggingPrefs(prefs)
           .build();
 
@@ -140,7 +133,7 @@ test.suite(function(env) {
       prefs.setLevel(logging.Type.BROWSER, logging.Level.DEBUG);
       prefs.setLevel(logging.Type.DRIVER, logging.Level.SEVERE);
 
-      driver = env.builder()
+      var driver = env.builder()
           .setLoggingPrefs(prefs)
           .build();
 

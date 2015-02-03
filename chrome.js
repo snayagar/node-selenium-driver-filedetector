@@ -229,18 +229,14 @@ var OPTIONS_CAPABILITY_KEY = 'chromeOptions';
 /**
  * Class for managing ChromeDriver specific options.
  * @constructor
- * @extends {webdriver.Serializable}
  */
 var Options = function() {
-  webdriver.Serializable.call(this);
-
   /** @private {!Array.<string>} */
   this.args_ = [];
 
   /** @private {!Array.<(string|!Buffer)>} */
   this.extensions_ = [];
 };
-util.inherits(Options, webdriver.Serializable);
 
 
 /**
@@ -261,7 +257,7 @@ Options.fromCapabilities = function(capabilities) {
         addExtensions(o.extensions || []).
         detachDriver(!!o.detach).
         setChromeBinaryPath(o.binary).
-        setChromeLogFile(o.logPath).
+        setChromeLogFile(o.logFile).
         setLocalState(o.localState).
         setUserPreferences(o.prefs);
   }
@@ -419,42 +415,27 @@ Options.prototype.toCapabilities = function(opt_capabilities) {
  * @return {{args: !Array.<string>,
  *           binary: (string|undefined),
  *           detach: boolean,
- *           extensions: !Array.<(string|!webdriver.promise.Promise.<string>))>,
+ *           extensions: !Array.<string>,
  *           localState: (Object|undefined),
- *           logPath: (string|undefined),
+ *           logFile: (string|undefined),
  *           prefs: (Object|undefined)}} The JSON wire protocol representation
  *     of this instance.
- * @override
  */
-Options.prototype.serialize = function() {
-  var json = {
+Options.prototype.toJSON = function() {
+  return {
     args: this.args_,
+    binary: this.binary_,
     detach: !!this.detach_,
     extensions: this.extensions_.map(function(extension) {
       if (Buffer.isBuffer(extension)) {
         return extension.toString('base64');
       }
-      return webdriver.promise.checkedNodeCall(
-          fs.readFile, extension, 'base64');
-    })
+      return fs.readFileSync(extension, 'base64');
+    }),
+    localState: this.localState_,
+    logFile: this.logFile_,
+    prefs: this.prefs_
   };
-
-  // ChromeDriver barfs on null keys, so we must ensure these are not included
-  // if unset (really?)
-  if (this.binary_) {
-    json.binary = this.binary_;
-  }
-  if (this.localState_) {
-    json.localState = this.localState_;
-  }
-  if (this.logFile_) {
-    json.logPath = this.logFile_;
-  }
-  if (this.prefs_) {
-    json.prefs = this.prefs_;
-  }
-
-  return json;
 };
 
 

@@ -15,7 +15,6 @@
 
 var fs = require('fs'),
     path = require('path'),
-    rimraf = require('rimraf'),
     tmp = require('tmp');
 
 var promise = require('..').promise;
@@ -26,35 +25,6 @@ var PATH_SEPARATOR = process.platform === 'win32' ? ';' : ':';
 
 // PUBLIC API
 
-
-
-/**
- * Recursively removes a directory and all of its contents. This is equivalent
- * to {@code rm -rf} on a POSIX system.
- * @param {string} path Path to the directory to remove.
- * @return {!promise.Promise} A promise to be resolved when the operation has
- *     completed.
- */
-exports.rmDir = function(path) {
-  return new promise.Promise(function(fulfill, reject) {
-    var numAttempts = 0;
-    attemptRm();
-    function attemptRm() {
-      numAttempts += 1;
-      rimraf(path, function(err) {
-        if (err) {
-          if (err.code === 'ENOTEMPTY' && numAttempts < 2) {
-            attemptRm();
-            return;
-          }
-          reject(err);
-        } else {
-          fulfill();
-        }
-      });
-    }
-  });
-};
 
 
 /**

@@ -40,68 +40,49 @@ describe('Mocha Integration', function() {
     afterEach(function() { assert.equal(this.x, 2); });
   });
 
-  describe('timeout handling', function() {
-    describe('it does not reset the control flow on a non-timeout', function() {
-      var flowReset = false;
+  describe('it properly allows timeouts and cancels control flow', function() {
+    var timeoutErr, flowReset;
 
-      beforeEach(function() {
-        flowReset = false;
-        promise.controlFlow().once(
-            promise.ControlFlow.EventType.RESET, onreset);
-      });
-
-      test.it('', function() {
-        this.timeout(100);
-        return promise.delayed(50);
-      });
-
-      afterEach(function() {
-        assert.ok(!flowReset);
-        promise.controlFlow().removeListener(
-            promise.ControlFlow.EventType.RESET, onreset);
-      });
-
-      function onreset() {
+    beforeEach(function() {
+      flowReset = false;
+      promise.controlFlow().on(promise.ControlFlow.EventType.RESET, function() {
         flowReset = true;
-      }
+      });
     });
 
-    describe('it resets the control flow after a timeout' ,function() {
-      var timeoutErr, flowReset;
+    test.it('', function() {
+      var mochaCallback = this.runnable().callback.mochaCallback;
+      this.runnable().callback.mochaCallback = function(err) {
+        timeoutErr = err;
+        // We do not pass along the arguments because we want this it block
+        // to always pass, we apply the tests that ensure the timeout was
+        // successfully called and that the controlFlow promise were reset
+        // in the afterEach block.
+        return mochaCallback.apply(this);
+      };
 
-      beforeEach(function() {
-        flowReset = false;
-        promise.controlFlow().once(
-            promise.ControlFlow.EventType.RESET, onreset);
-      });
+      this.timeout(1000);
+      var unresolvedPromise = promise.defer();
+      return unresolvedPromise.promise;
+    });
 
-      test.it('', function() {
-        var callback = this.runnable().callback;
-        var test = this;
-        this.runnable().callback = function(err) {
-          timeoutErr = err;
-          // Reset our timeout to 0 so Mocha does not fail the test.
-          test.timeout(0);
-          // When we invoke the real callback, do not pass along the error so
-          // Mocha does not fail the test.
-          return callback.call(this);
-        };
+    afterEach(function() {
+      assert.equal(
+        flowReset,
+        true,
+        'the controlFlow for the test block should be cancelled on timeout'
+      );
 
-        test.timeout(50);
-        return promise.defer().promise;
-      });
+      assert.equal(
+        timeoutErr instanceof Error,
+        true,
+        'the testing error should be propegated back up to the mocha test runner'
+      );
 
-      afterEach(function() {
-        promise.controlFlow().removeListener(
-            promise.ControlFlow.EventType.RESET, onreset);
-        assert.ok(flowReset, 'control flow was not reset after a timeout');
-        assert.ok(timeoutErr instanceof Error);
-        assert.equal(timeoutErr.message, 'timeout of 50ms exceeded');
-      });
-
-      function onreset() {
-        flowReset = true;
-      }
+      assert.equal(
+        timeoutErr.message,
+        'timeout of 1000ms exceeded'
+      );
     });
   });
 });

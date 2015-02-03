@@ -15,12 +15,12 @@
 
 'use strict';
 
-var Browser = require('..').Browser,
-    By = require('..').By,
+var By = require('..').By,
     ErrorCode = require('..').error.ErrorCode,
     until = require('..').until,
     assert = require('../testing/assert'),
     test = require('../lib/test'),
+    Browser = test.Browser,
     Pages = test.Pages;
 
 
@@ -28,13 +28,7 @@ test.suite(function(env) {
   var browsers = env.browsers;
 
   var driver;
-  test.before(function() {
-    driver = env.builder().build();
-  });
-
-  test.after(function() {
-    driver.quit();
-  });
+  beforeEach(function() { driver = env.driver; });
 
   test.it('should wait for document to be loaded', function() {
     driver.get(Pages.simpleTestPage);
@@ -47,7 +41,8 @@ test.suite(function(env) {
     assert(driver.getTitle()).equalTo('We Arrive Here');
   });
 
-  test.it('should follow meta redirects', function() {
+  test.ignore(browsers(Browser.ANDROID)).it('should follow meta redirects',
+      function() {
     driver.get(Pages.metaRedirectPage);
     assert(driver.getTitle()).equalTo('We Arrive Here');
   });
@@ -58,7 +53,7 @@ test.suite(function(env) {
     driver.findElement(By.id('id1'));
   });
 
-  test.ignore(browsers(Browser.IPAD, Browser.IPHONE)).
+  test.ignore(browsers(Browser.ANDROID, Browser.IOS)).
   it('should wait for all frames to load in a frameset', function() {
     driver.get(Pages.framesetPage);
     driver.switchTo().frame(0);
@@ -74,7 +69,7 @@ test.suite(function(env) {
     });
   });
 
-  test.ignore(browsers(Browser.SAFARI)).
+  test.ignore(browsers(Browser.ANDROID, Browser.SAFARI)).
   it('should be able to navigate back in browser history', function() {
     driver.get(Pages.formPage);
 
@@ -96,7 +91,7 @@ test.suite(function(env) {
     assert(driver.getTitle()).equalTo('XHTML Test Page');
   });
 
-  test.ignore(browsers(Browser.SAFARI)).
+  test.ignore(browsers(Browser.ANDROID, Browser.SAFARI)).
   it('should be able to navigate forwards in browser history', function() {
     driver.get(Pages.formPage);
 
@@ -128,12 +123,12 @@ test.suite(function(env) {
 
   // Only implemented in Firefox.
   test.ignore(browsers(
+      Browser.ANDROID,
       Browser.CHROME,
       Browser.IE,
-      Browser.IPAD,
-      Browser.IPHONE,
+      Browser.IOS,
       Browser.OPERA,
-      Browser.PHANTOM_JS,
+      Browser.PHANTOMJS,
       Browser.SAFARI)).
   it('should timeout if page load timeout is set', function() {
     driver.call(function() {

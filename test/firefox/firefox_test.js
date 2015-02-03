@@ -18,7 +18,6 @@
 var path = require('path');
 
 var firefox = require('../../firefox'),
-    io = require('../../io'),
     test = require('../../lib/test'),
     assert = require('../../testing/assert');
 
@@ -30,18 +29,12 @@ var NORMAL_EXTENSION = path.join(__dirname,
 
 
 test.suite(function(env) {
+  env.autoCreateDriver = false;
+
   describe('firefox', function() {
     describe('Options', function() {
-      var driver;
-
-      test.beforeEach(function() {
-        driver = null;
-      });
-
       test.afterEach(function() {
-        if (driver) {
-          driver.quit();
-        }
+        return env.dispose();
       });
 
       test.it('can start Firefox with custom preferences', function() {
@@ -50,10 +43,7 @@ test.suite(function(env) {
 
         var options = new firefox.Options().setProfile(profile);
 
-        driver = env.builder().
-            setFirefoxOptions(options).
-            build();
-
+        var driver = env.driver = new firefox.Driver(options);
         driver.get('data:text/html,<html><div>content</div></html>');
 
         var userAgent = driver.executeScript(
@@ -67,10 +57,7 @@ test.suite(function(env) {
 
         var options = new firefox.Options().setProfile(profile);
 
-        driver = env.builder().
-            setFirefoxOptions(options).
-            build();
-
+        var driver = env.driver = new firefox.Driver(options);
         loadJetpackPage(driver,
             'data:text/html;charset=UTF-8,<html><div>content</div></html>');
         assert(driver.findElement({id: 'jetpack-sample-banner'}).getText())
@@ -83,10 +70,7 @@ test.suite(function(env) {
 
         var options = new firefox.Options().setProfile(profile);
 
-        driver = env.builder().
-            setFirefoxOptions(options).
-            build();
-
+        var driver = env.driver = new firefox.Driver(options);
         driver.get('data:text/html,<html><div>content</div></html>');
         assert(driver.findElement({id: 'sample-extension-footer'}).getText())
             .equalTo('Goodbye');
@@ -99,9 +83,7 @@ test.suite(function(env) {
 
         var options = new firefox.Options().setProfile(profile);
 
-        driver = env.builder().
-            setFirefoxOptions(options).
-            build();
+        var driver = env.driver = new firefox.Driver(options);
 
         loadJetpackPage(driver,
             'data:text/html;charset=UTF-8,<html><div>content</div></html>');
@@ -120,37 +102,6 @@ test.suite(function(env) {
           return driver.isElementPresent({id: 'jetpack-sample-banner'});
         }, 3000);
       }
-    });
-
-    describe('profile management', function() {
-      var driver;
-
-      test.beforeEach(function() {
-        driver = null;
-      });
-
-      test.afterEach(function() {
-        if (driver) {
-          driver.quit();
-        }
-      });
-
-      test.it('deletes the temp profile on quit', function() {
-        driver = env.builder().build();
-
-        var profilePath = driver.call(function() {
-          var path = driver.profilePath_;
-          assert(io.exists(path)).isTrue();
-          return path;
-        });
-
-        return driver.quit().then(function() {
-          driver = null;
-          return profilePath;
-        }).then(function(path) {
-          assert(io.exists(path)).isFalse();
-        });
-      });
     });
   });
 }, {browsers: ['firefox']});

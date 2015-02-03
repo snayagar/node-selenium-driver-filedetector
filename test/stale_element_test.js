@@ -17,19 +17,18 @@
 
 var fail = require('assert').fail;
 
-var Browser = require('..').Browser,
-    By = require('..').By,
+var By = require('..').By,
     error = require('..').error,
     until = require('..').until,
     assert = require('../testing/assert'),
     test = require('../lib/test'),
+    Browser = test.Browser,
     Pages = test.Pages;
 
 
 test.suite(function(env) {
   var driver;
-  test.before(function() { driver = env.builder().build(); });
-  test.after(function() { driver.quit(); });
+  beforeEach(function() { driver = env.driver; });
 
   test.it(
       'dynamically removing elements from the DOM trigger a ' +

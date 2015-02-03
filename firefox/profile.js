@@ -18,11 +18,9 @@
 var AdmZip = require('adm-zip'),
     fs = require('fs'),
     path = require('path'),
-    util = require('util'),
     vm = require('vm');
 
-var Serializable = require('..').Serializable,
-    promise = require('..').promise,
+var promise = require('..').promise,
     _base = require('../_base'),
     io = require('../io'),
     extension = require('./extension');
@@ -215,11 +213,8 @@ function decode(data) {
  *     use a template for this profile. If not specified, a blank profile will
  *     be used.
  * @constructor
- * @extends {Serializable.<string>}
  */
 var Profile = function(opt_dir) {
-  Serializable.call(this);
-
   /** @private {!Object} */
   this.preferences_ = {};
 
@@ -238,7 +233,6 @@ var Profile = function(opt_dir) {
   /** @private {!Array.<string>} */
   this.extensions_ = [];
 };
-util.inherits(Profile, Serializable);
 
 
 /**
@@ -403,16 +397,6 @@ Profile.prototype.encode = function() {
   }).then(function(data) {
     return new Buffer(data).toString('base64');
   });
-};
-
-
-/**
- * Encodes this profile as a zipped, base64 encoded directory.
- * @return {!promise.Promise.<string>} A promise for the encoded profile.
- * @override
- */
-Profile.prototype.serialize = function() {
-  return this.encode();
 };
 
 
